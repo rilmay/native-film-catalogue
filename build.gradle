@@ -1,0 +1,62 @@
+plugins {
+    id("com.github.johnrengelman.shadow") version "7.1.1"
+    id("io.micronaut.application") version "3.2.2"
+}
+
+version = "0.1"
+group = "com.guzov"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("io.micronaut:micronaut-jackson-databind")
+    implementation("io.micronaut:micronaut-runtime")
+    implementation("jakarta.annotation:jakarta.annotation-api")
+
+
+    implementation 'software.amazon.awssdk:dynamodb-enhanced:2.17.152'
+    implementation platform("software.amazon.awssdk:bom:2.17.+")
+    implementation "io.micronaut.aws:micronaut-aws-sdk-v2:3.0.+"
+    implementation "software.amazon.awssdk:lambda"
+
+
+    runtimeOnly("ch.qos.logback:logback-classic")
+    compileOnly("org.graalvm.nativeimage:svm")
+
+    implementation("io.micronaut:micronaut-validation")
+
+    testImplementation("io.micronaut:micronaut-http-client")
+
+}
+
+
+application {
+    mainClass.set("com.guzov.filmcatalogue.Application")
+}
+java {
+    sourceCompatibility = JavaVersion.toVersion("11")
+    targetCompatibility = JavaVersion.toVersion("11")
+}
+
+graalvmNative.toolchainDetection = false
+micronaut {
+    runtime("lambda")
+    testRuntime("junit5")
+    processing {
+        incremental(true)
+        annotations("com.guzov.*")
+    }
+}
+
+
+tasks.named("dockerfileNative") {
+    args(
+        "-XX:MaximumHeapSizePercent=80",
+        "-Dio.netty.allocator.numDirectArenas=0",
+        "-Dio.netty.noPreferDirect=true"
+    )
+}
+
+
